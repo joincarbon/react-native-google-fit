@@ -61,11 +61,12 @@ public class BodyHistory {
 
     public ReadableArray getHistory(long startTime, long endTime, int bucketInterval, String bucketUnit) {
         // for height we need to take time, since GoogleFit foundation - https://stackoverflow.com/questions/28482176/read-the-height-in-googlefit-in-android
-        startTime = this.dataType == DataType.TYPE_WEIGHT ? startTime : 1401926400;
+        startTime = this.dataType == DataType.TYPE_HEIGHT ? 1401926400 : startTime;
         DataReadRequest.Builder readRequestBuilder = new DataReadRequest.Builder()
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS);
 
-        if (this.dataType == DataType.TYPE_WEIGHT) {
+				// If not height its weight or body fat
+        if (this.dataType != DataType.TYPE_HEIGHT) {
 
             // old method:
             // In general here we want to set the bucket size to the smallest possible allowed, in case the
@@ -89,7 +90,7 @@ public class BodyHistory {
 
             readRequestBuilder
                 .bucketByTime(bucketInterval, HelperUtil.processBucketUnit(bucketUnit))
-                .aggregate(this.dataType, DataType.AGGREGATE_WEIGHT_SUMMARY);
+                .aggregate(this.dataType, this.dataType.getAggregateType());
 
         } else {
             readRequestBuilder.read(this.dataType);
@@ -227,10 +228,10 @@ public class BodyHistory {
             // For aggregated weight summary, only the min, max and average values are available (i.e. the
             // most recent sample is not an option), so use average value to maximise the match between values
             // returned here and values as reported by Google Fit app
-            if (this.dataType == DataType.TYPE_WEIGHT) {
-                bodyMap.putDouble("value", dp.getValue(Field.FIELD_AVERAGE).asFloat());
+            if (this.dataType == DataType.TYPE_HEIGHT) {
+							bodyMap.putDouble("value", dp.getValue(Field.FIELD_HEIGHT).asFloat());
             } else {
-                bodyMap.putDouble("value", dp.getValue(Field.FIELD_HEIGHT).asFloat());
+							bodyMap.putDouble("value", dp.getValue(Field.FIELD_AVERAGE).asFloat());
             }
         }
         map.pushMap(bodyMap);
